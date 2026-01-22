@@ -1,0 +1,30 @@
+# --- Root & OS ---
+.venv/
+venv/
+*.sql
+start.bat
+.DS_Store
+Thumbs.db
+
+# --- Python / Django ---
+**/__pycache__/
+*.py[cod]
+*$py.class
+backend/.env
+backend/media/
+backend/staticfiles/
+backend/celerybeat-schedule*
+backend/db.sqlite3
+
+# --- Node / React ---
+**/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+npm-debug.log*
+
+# --- Specific Cleanups ---
+backend/snippets/
+backend/resource.py
+backend/users/
+frontend/snippets/
