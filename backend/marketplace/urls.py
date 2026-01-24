@@ -29,4 +29,4 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/blacklist/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("api/", include("marketplace_app.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]

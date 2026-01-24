@@ -1,6 +1,7 @@
 # --- Root & OS ---
 .venv/
 venv/
+.env
 *.sql
 start.bat
 .DS_Store
