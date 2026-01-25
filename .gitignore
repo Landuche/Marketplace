@@ -26,6 +26,8 @@ npm-debug.log*
 
 # --- Specific Cleanups ---
 backend/snippets/
+backend/.coverage
+backend/.coveragerc
 backend/resource.py
 backend/users/
 frontend/snippets/
