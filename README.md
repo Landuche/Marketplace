@@ -32,11 +32,11 @@ This project is a high-integrity e-commerce platform designed to handle complex 
 - **Security:** Features JWT token rotation with custom Axios interceptor to handle token refreshing.
 - **Adress Validation:** Integrates Google Maps API for normalized shipping address entry.
 - **Full-Stack Type Safety:** Shared TypeScript interfaces ensure strict data contracts between the Django backend and the React frontend.
-- **Automated Testing:** CI/CD via GitHub Actions.
+- **CI/CD & Quality Assurance:** Automated GitHub Actions pipeline that executes the pytest suite and performs OpenAPI 3.1 schema validation using drf-spectacular.
 
 ## Tech Stack
 
-- **Backend:** Django / Django Rest Framework / Celery / Pytest
+- **Backend:** Django / Django Rest Framework / Celery / drf-spectacular / Pytest
 - **Frontend:** React / TypeScript / Tailwind CSS / Axios
 - **Infrastructure:** Docker / Nginx / Gunicorn
 - **Database/Cache:** PostgreSQL / Redis
@@ -44,6 +44,8 @@ This project is a high-integrity e-commerce platform designed to handle complex 
 
 ## Next Steps
 
+- **Production Monitoring:** Integrate Sentry for real-time error tracking and performance monitoring.
+- **API Testing:** Integrate Postman for endpoint exploration and testing.
 - **Production Deployment:** Deploy the MVP to Oracle Cloud using Docker orchestration.
 
 <h1 id="pt">Marketplace MVP</h1>
@@ -61,10 +63,11 @@ Este projeto é uma plataforma de e-commerce de alta integridade, projetada para
 - **Validação de Endereços:** Integração com Google Maps API para validação de endereços.
 - **Full-Stack Type Safety:** Interfaces TypeScript garantindo comunicação ideal entre backend e frontend.
 - **Testes Automatizados:** CI/CD implementado com GitHub Actions.
+-**CI/CD & Garantia de Qualidade:** Pipeline automatizado via GitHub Actions que executa testes pytest e realiza a validação de schema OpenAPI 3.1 via drf-spectacular.
 
 ## Tech Stack
 
-- **Backend:** Django / Django Rest Framework / Celery / Pytest
+- **Backend:** Django / Django Rest Framework / drf-spectacular / Celery / Pytest
 - **Frontend:** React / TypeScript / Tailwind CSS / Axios
 - **Infraestrutura:** Docker / Nginx / Gunicorn
 - **Banco de Dados/Cache:** PostgreSQL / Redis
@@ -72,4 +75,6 @@ Este projeto é uma plataforma de e-commerce de alta integridade, projetada para
 
 ## Proximos Passos
 
+- **Monitoramento a Nivel de Produção:** Integrar o Sentry para rastreamento de erros em tempo real e monitoramento de performance.
+- **Testes de API:** Integrar o Postman para exploração de endpoints e testes de integração;
 - **Deploy em Produção:** Realizar o deploy do MVP com Oracle Cloud, utilizando a orquestração Docker. 

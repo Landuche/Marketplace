@@ -77,7 +77,7 @@ def test_stripe_webhook(client, buyer, listing):
             HTTP_STRIPE_SIGNATURE="fake_signature"
         )
 
-    assert response.status_code == 200
+    assert response.status_code == 204
     order.refresh_from_db()
     assert order.status == Order.PaymentStatus.PAID
 
@@ -151,7 +151,7 @@ def test_shipping(client, buyer, seller, listing):
 
     url = reverse('order-mark-shipped', kwargs={'id': order_id})
     tracking_response = client.post(url, data={'tracking_code': 'tracking_123', 'item_ids': [order_item_id]}, format='json')
-    assert tracking_response.status_code == 200
+    assert tracking_response.status_code == 204
 
 
 @pytest.mark.django_db
@@ -179,7 +179,7 @@ def test_user_soft_delete(client, buyer):
     url = reverse('user-me')
 
     response = client.delete(url)
-    assert response.status_code == 200
+    assert response.status_code == 204
 
     with freeze_time("2026-01-01 12:00:00"):
         User.objects.filter(id=buyer.id).update(inactive_date=timezone.now())

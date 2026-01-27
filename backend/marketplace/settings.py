@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "versatileimagefield",
     "channels",
     "corsheaders",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -109,6 +110,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 if not DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
@@ -182,6 +184,30 @@ CELERY_BEAT_SCHEDULE = {
     "sync_redis": {
         "task": "marketplace_app.tasks.sync_redis_stock",
         "schedule": timedelta(minutes=10),
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Marketplace API',
+    'DESCRIPTION': 'Landuche Marketplace.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_PATCH': True,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SECURITY': [{'jwt': []}],
+    'APPEND_COMPONENTS': {
+        "securitySchemes": {
+            "jwt": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,          
+        'displayOperationId': False,
     },
 }
 

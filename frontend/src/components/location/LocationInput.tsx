@@ -56,8 +56,8 @@ const HandleInput = ({ selectedLocation, initialValue }: InputProps) => {
       selectedLocation({
         location: location.formatted_address,
         city: city ? city.long_name : '',
-        latitude: location.geometry?.location.lat() ?? 0,
-        longitude: location.geometry.location.lng() ?? 0,
+        latitude: Number(location.geometry?.location.lat().toFixed(6)) ?? 0,
+        longitude: Number(location.geometry?.location.lng().toFixed(6)) ?? 0,
       });
     });
   }, [places, selectedLocation]);

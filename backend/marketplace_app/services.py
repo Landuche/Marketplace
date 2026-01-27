@@ -105,7 +105,7 @@ def add_to_cart(user, listing, quantity):
 
     if not created:
         new_total = item.quantity + quantity
-        if new_total > listing.quantity:
+        if new_total > listing.available_stock:
             raise Exception("Insufficient stock.")
 
         item.quantity = new_total

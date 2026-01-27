@@ -1,0 +1,1543 @@
+openapi: 3.0.3
+info:
+  title: Marketplace API
+  version: 1.0.0
+  description: Landuche Marketplace.
+paths:
+  /api/cart/:
+    get:
+      operationId: cart_list
+      description: Returns the current user's cart with items and the total price.
+      summary: Retrieve User Cart
+      tags:
+      - Cart
+      security:
+      - jwtAuth: []
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cart'
+          description: ''
+  /api/cart-item/:
+    post:
+      operationId: cart_item_create
+      description: Adds a listing to the cart or increments quantity if already present.
+      summary: Add Item to Cart
+      tags:
+      - Cart
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CartItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CartItemRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - jwt: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                InvalidQuantity:
+                  value:
+                    quantity: Ensure this value is greater than or equal to 0.
+                  summary: Invalid Quantity
+                InvalidListing:
+                  value:
+                    listing_id: Invalid pk "019bf8b8-9333-7826-8de4-59ecada9588c"
+                      - object does not exist.
+                  summary: Invalid Listing
+          description: ''
+  /api/cart-item/{id}/:
+    patch:
+      operationId: cart_item_partial_update
+      description: Set a specific quantity for an item in the cart. Validates against
+        stock.
+      summary: Update Cart Item Quantity
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this cart item.
+        required: true
+      tags:
+      - Cart
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCartItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCartItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCartItemRequest'
+      security:
+      - jwtAuth: []
+      - jwt: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItem'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                InvalidQuantity:
+                  value:
+                    quantity: Ensure this value is greater than or equal to 0.
+                  summary: Invalid Quantity
+                InvalidListing:
+                  value:
+                    listing_id: Invalid pk "019bf8b8-9333-7826-8de4-59ecada9588c"
+                      - object does not exist.
+                  summary: Invalid Listing
+          description: ''
+    delete:
+      operationId: cart_item_destroy
+      description: Removes the specific line item from the user's cart.
+      summary: Remove Item from Cart
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this cart item.
+        required: true
+      tags:
+      - Cart
+      security:
+      - jwtAuth: []
+      - jwt: []
+      responses:
+        '204':
+          description: No response body
+  /api/cart/clear/:
+    delete:
+      operationId: cart_clear_destroy
+      description: Removes all items from the current user's cart.
+      summary: Clear Cart
+      tags:
+      - Cart
+      security:
+      - jwtAuth: []
+      - jwt: []
+      responses:
+        '204':
+          description: No response body
+  /api/listings/:
+    get:
+      operationId: listings_list
+      description: Search by title/description/seller. Use "profile=true" to see current
+        user items.
+      summary: List/Search Listings
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: profile
+        schema:
+          type: boolean
+        description: If true and authenticated, includes user own inactive listings.
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: seller__id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: seller__username
+        schema:
+          type: string
+      tags:
+      - Listings
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Listing'
+          description: ''
+    post:
+      operationId: listings_create
+      description: Handles images via multipart/form-data. Includes a manifest JSON
+        mapping image data.
+      summary: Create Listing With Images Support
+      tags:
+      - Listings
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 3
+                description:
+                  type: string
+                price:
+                  type: number
+                  minimum: 0.01
+                quantity:
+                  type: number
+                  minimum: 1
+                manifest:
+                  type: string
+                  format: json
+                  description: 'JSON string: [{"key": "image_uuid", "isMain": true}]'
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+              - title
+              - price
+              - quantity
+      security:
+      - jwt: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                FieldValidationErrors:
+                  value:
+                    title:
+                    - Ensure this field has at least 3 characters.
+                    price:
+                    - Ensure this value is greater than or equal to 0.01.
+                    quantity:
+                    - Minimum quantity is 1.
+                  summary: Field Validation Errors
+                MissingRequiredFields:
+                  value:
+                    title:
+                    - This field is required.
+                    price:
+                    - This field is required.
+                    quantity:
+                    - This field is required.
+                  summary: Missing Required Fields
+          description: ''
+  /api/listings/{id}/:
+    get:
+      operationId: listings_retrieve
+      description: "Return listing full data. \n\n\n**Available Statuses:**\n* `IS`
+        : In Stock\n* `OOS`: Out of Stock\n"
+      summary: Get Listing Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this listing.
+        required: true
+      tags:
+      - Listings
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
+    patch:
+      operationId: listings_partial_update
+      description: Handles images via multipart/form-data. Includes a manifest JSON
+        mapping image data.
+      summary: Update Listing With Images Support
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this listing.
+        required: true
+      tags:
+      - Listings
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 3
+                description:
+                  type: string
+                price:
+                  type: number
+                  minimum: 0.01
+                quantity:
+                  type: number
+                  minimum: 1
+                manifest:
+                  type: string
+                  format: json
+                  description: 'JSON string: [{"key": "image_uuid", "isMain": true}]'
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                deleted_images:
+                  type: string
+                  format: json
+                  description: JSON string array of image IDs to be removed.
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                FieldValidationErrors:
+                  value:
+                    title:
+                    - Ensure this field has at least 3 characters.
+                    price:
+                    - Ensure this value is greater than or equal to 0.01.
+                    quantity:
+                    - Minimum quantity is 1.
+                  summary: Field Validation Errors
+                MissingRequiredFields:
+                  value:
+                    title:
+                    - This field is required.
+                    price:
+                    - This field is required.
+                    quantity:
+                    - This field is required.
+                  summary: Missing Required Fields
+          description: ''
+  /api/listings/{id}/soft-delete/:
+    post:
+      operationId: listings_soft_delete_create
+      description: Deactivates or Reactivates a listing without deleting it from the
+        DB.
+      summary: Toggle Listing Active Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this listing.
+        required: true
+      tags:
+      - Listings
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SoftDeleteResponse'
+          description: ''
+  /api/order/:
+    get:
+      operationId: order_list
+      description: "List orders. Use \"view=seller\" to see orders from the current
+        user. \n\n\n**Available Statuses (Order Model):**\n* `P`: Pending\n* `A`:
+        Paid\n* `C`: Cancelled\n\n\n**Available Statuses (Order Item Model):**\n*
+        `AP`: Awaiting Payment\n* `AS`: Awaiting Shipment\n* `IT`: In Transit\n* `D`
+        : Delivered\n* `C` : Cancelled\n"
+      summary: List Orders
+      parameters:
+      - in: query
+        name: view
+        schema:
+          type: string
+          enum:
+          - buyer
+          - seller
+        description: Context of the orders requested.
+      tags:
+      - Orders
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+              examples:
+                OrderListResponse:
+                  value:
+                  - id: 019bfb72-8c8d-7a4a-954d-7a38ce4f5680
+                    items:
+                    - id: 2
+                      quantity: 1
+                      listing_price: 123.0
+                      listing_id: 019bf8b8-9333-7826-8de4-59ecada9589c
+                      status: AS
+                      status_display: Awaiting Shipment
+                      tracking_code: null
+                      listing_title: Vintage Camera
+                      listing_image: https://example.com/image.jpg
+                      seller_username: PhotographyStore
+                      seller_id: 019bf8b8-57ba-7660-acae-be2ca9260220
+                      listing_is_active: true
+                    total_price: '123.00'
+                    status: A
+                    status_display: Paid
+                    created_at: '2026-01-26T17:55:46Z'
+                    buyer_address: Av. Paulista, 500, São Paulo, Brazil
+                    buyer_email: buyer@example.com
+                    user_role: buyer
+                  summary: Order List Response
+          description: ''
+    post:
+      operationId: order_create
+      description: Process the current cart to create a new order, optionally can
+        receive an order_id, to handle the repay function.
+      summary: Create Order Based on the User Current Cart
+      tags:
+      - Orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequestRequest'
+      security:
+      - jwt: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                CreateOrderResponse:
+                  value:
+                    id: 019bfb72-8c8d-7a4a-954d-7a38ce4f5680
+                    items:
+                    - id: 2
+                      quantity: 1
+                      listing_price: 123.0
+                      listing_id: 019bf8b8-9333-7826-8de4-59ecada9589c
+                      status: AS
+                      status_display: Awaiting Shipment
+                      tracking_code: null
+                      listing_title: Vintage Camera
+                      listing_image: https://example.com/image.jpg
+                      seller_username: PhotographyStore
+                      seller_id: 019bf8b8-57ba-7660-acae-be2ca9260220
+                      listing_is_active: true
+                    total_price: '123.00'
+                    status: A
+                    status_display: Paid
+                    created_at: '2026-01-26T17:55:46Z'
+                    buyer_address: Av. Paulista, 500, São Paulo, Brazil
+                    buyer_email: buyer@example.com
+                    user_role: buyer
+                  summary: Create Order Response
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderError'
+          description: ''
+  /api/order/{id}/:
+    get:
+      operationId: order_retrieve
+      description: "Returns order data. If PENDING, includes a new client_secret for
+        payment. \n\n\n**Available Statuses (Order Model):**\n* `P`: Pending\n* `A`:
+        Paid\n* `C`: Cancelled\n\n\n**Available Statuses (Order Item Model):**\n*
+        `AP`: Awaiting Payment\n* `AS`: Awaiting Shipment\n* `IT`: In Transit\n* `D`
+        : Delivered\n* `C` : Cancelled\n"
+      summary: Get Order Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this order.
+        required: true
+      tags:
+      - Orders
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                RetrieveOrderResponse:
+                  value:
+                    id: 019bfb72-8c8d-7a4a-954d-7a38ce4f5680
+                    items:
+                    - id: 2
+                      quantity: 1
+                      listing_price: 123.0
+                      listing_id: 019bf8b8-9333-7826-8de4-59ecada9589c
+                      status: AS
+                      status_display: Awaiting Shipment
+                      tracking_code: null
+                      listing_title: Vintage Camera
+                      listing_image: https://example.com/image.jpg
+                      seller_username: PhotographyStore
+                      seller_id: 019bf8b8-57ba-7660-acae-be2ca9260220
+                      listing_is_active: true
+                    total_price: '123.00'
+                    status: A
+                    status_display: Paid
+                    created_at: '2026-01-26T17:55:46Z'
+                    buyer_address: Av. Paulista, 500, São Paulo, Brazil
+                    buyer_email: buyer@example.com
+                    user_role: buyer
+                  summary: Retrieve Order Response
+          description: ''
+  /api/order/{id}/mark-shipped/:
+    post:
+      operationId: order_mark_shipped_create
+      description: "Sellers use this to provide tracking info for specific items in
+        an order. \n\n\n**Available Statuses (Order Item Model):**\n* `AP`: Awaiting
+        Payment\n* `AS`: Awaiting Shipment\n* `IT`: In Transit\n* `D` : Delivered\n*
+        `C` : Cancelled\n"
+      summary: Mark Items as Shipped
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this order.
+        required: true
+      tags:
+      - Orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkShippedRequestRequest'
+        required: true
+      security:
+      - jwt: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                TrackingCodeError:
+                  value:
+                    error: Tracking code is required
+                  summary: Tracking Code Error
+                InvalidItemError:
+                  value:
+                    error: Invalid items
+                  summary: Invalid Item Error
+          description: ''
+  /api/order/{id}/refund/:
+    post:
+      operationId: order_refund_create
+      description: Initiates a refund for the order. Status will change to CANCELLED.
+      summary: Refund Order
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this order.
+        required: true
+      tags:
+      - Orders
+      security:
+      - jwt: []
+      responses:
+        '204':
+          description: No response body
+  /api/register/:
+    post:
+      operationId: register_create
+      description: Creates a new user account. Supports multi-part form data for profile
+        image uploads.
+      summary: User Registration
+      tags:
+      - Users
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+              examples:
+                ValidRegistrationResponse:
+                  value:
+                    username: Test
+                    email: test@example.com
+                    profile_picture: null
+                    location: Av. Paulista, 500 - Bela Vista, São Paulo - SP, 01323-030,
+                      Brasil
+                    city: São Paulo
+                    latitude: '-23.5678355'
+                    longitude: '-46.6480931'
+                  summary: Valid Registration Response
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                ValidationError(UsernameAlreadyInUse):
+                  value:
+                    username: user with this username already exists.
+                  summary: Validation Error (Username Already in Use)
+                ValidationError(EmailAlreadyInUse):
+                  value:
+                    email: user with this email already exists.
+                  summary: Validation Error (Email Already in Use)
+                ValidationError(PasswordTooWeak):
+                  value:
+                    password: Password must be at least 8 characters.
+                  summary: Validation Error (Password too weak)
+          description: ''
+  /api/token/:
+    post:
+      operationId: token_create
+      description: Login with username and password, returns access and refresh tokens,
+        automatically activate inactive users on the soft delete period.
+      summary: User Login
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                SuccessfulLogin:
+                  value:
+                    refresh: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    access: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  summary: Successful Login
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                InvalidCredentials:
+                  value:
+                    detail: No active account found with the given credentials
+                  summary: Invalid Credentials
+          description: ''
+  /api/token/blacklist/:
+    post:
+      operationId: token_blacklist_create
+      description: |-
+        Takes a token and blacklists it. Must be used with the
+        `rest_framework_simplejwt.token_blacklist` app installed.
+      summary: Logout / Blacklist Token
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+        required: true
+      security:
+      - jwt: []
+      responses:
+        '200':
+          description: No response body
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      summary: Refresh Access Token
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/users/:
+    get:
+      operationId: users_list
+      description: Retrieve a list of all active sellers.
+      summary: List Sellers
+      tags:
+      - Users
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserPublic'
+          description: ''
+  /api/users/{username}/:
+    get:
+      operationId: users_retrieve
+      description: Public profile of a seller.
+      summary: View Seller Profile
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - Users
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+          description: ''
+  /api/users/change-password/:
+    post:
+      operationId: users_change_password_create
+      description: Updates the user password. Requires current password verification.
+      summary: Change Password
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePasswordSuccess'
+              examples:
+                Success:
+                  value:
+                    detail: Password updated.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                ValidationError(IncorrectOldPassword):
+                  value:
+                    old_password: Wrong password.
+                  summary: Validation Error (Incorrect old password)
+                ValidationError(NewPasswordTooWeak):
+                  value:
+                    new_password: Password must be at least 8 characters.
+                  summary: Validation Error (New password too weak)
+          description: ''
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: Returns the private data of the currently logged-in user.
+      summary: View My Profile
+      tags:
+      - Users
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: users_me_partial_update
+      description: Update personal data.
+      summary: Update My Profile
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwt: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: users_me_destroy
+      description: Performs a soft delete on the user account.
+      summary: Delete My Account
+      tags:
+      - Users
+      security:
+      - jwt: []
+      responses:
+        '204':
+          description: No response body
+  /api/webhook/stripe/:
+    post:
+      operationId: webhook_stripe_create
+      description: 'Endpoint for Stripe. '
+      summary: Stripe Webhook Listener
+      parameters:
+      - in: header
+        name: Stripe-Signature
+        schema:
+          type: string
+        description: Signature provided by Stripe to verify webhook authenticity.
+        required: true
+      tags:
+      - Stripe
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                type:
+                  type: string
+                  example: payment_intent.succeeded
+                data:
+                  type: object
+                  properties:
+                    object:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: pi_3N...
+                        amount:
+                          type: integer
+                          example: 15000
+                        currency:
+                          type: string
+                          example: usd
+                        metadata:
+                          type: object
+                          properties:
+                            order_id:
+                              type: string
+                              format: uuid
+      security:
+      - jwt: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          description: No response body
+components:
+  schemas:
+    Cart:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+          readOnly: true
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - id
+      - items
+      - total_price
+    CartItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        listing:
+          allOf:
+          - $ref: '#/components/schemas/Listing'
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        added_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - added_at
+      - id
+      - listing
+    CartItemRequest:
+      type: object
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+          writeOnly: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - listing_id
+    ChangePasswordRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          minLength: 8
+        confirm_password:
+          type: string
+          minLength: 1
+      required:
+      - confirm_password
+      - new_password
+      - old_password
+    ChangePasswordSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    CustomTokenObtainRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    Listing:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+          minLength: 3
+        status:
+          $ref: '#/components/schemas/ListingStatusEnum'
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListingImage'
+          readOnly: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        available_stock:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        seller:
+          allOf:
+          - $ref: '#/components/schemas/UserPublic'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        status_display:
+          type: string
+          readOnly: true
+      required:
+      - available_stock
+      - created_at
+      - id
+      - images
+      - is_active
+      - price
+      - seller
+      - status_display
+      - title
+    ListingImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        is_main:
+          type: boolean
+      required:
+      - id
+      - image
+    ListingImageRequest:
+      type: object
+      properties:
+        image:
+          type: string
+          format: binary
+        is_main:
+          type: boolean
+      required:
+      - image
+    ListingRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/ListingStatusEnum'
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        description:
+          type: string
+          nullable: true
+      required:
+      - price
+      - title
+    ListingStatusEnum:
+      enum:
+      - IS
+      - OOS
+      type: string
+      description: |-
+        * `IS` - In Stock
+        * `OOS` - Out of Stock
+    MarkShippedRequestRequest:
+      type: object
+      properties:
+        item_ids:
+          type: array
+          items:
+            type: integer
+        tracking_code:
+          type: string
+          minLength: 1
+      required:
+      - item_ids
+      - tracking_code
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        items:
+          type: array
+          items: {}
+          readOnly: true
+        total_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/OrderStatusEnum'
+        status_display:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        client_secret:
+          type: string
+          readOnly: true
+          nullable: true
+        buyer_address:
+          type: string
+          maxLength: 150
+        buyer_email:
+          type: string
+          format: email
+          maxLength: 254
+        user_role:
+          type: string
+          readOnly: true
+      required:
+      - buyer_address
+      - buyer_email
+      - client_secret
+      - created_at
+      - id
+      - items
+      - status_display
+      - total_price
+      - user_role
+    OrderCreateRequestRequest:
+      type: object
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional. Used to resume an existing order.
+    OrderError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    OrderStatusEnum:
+      enum:
+      - P
+      - A
+      - C
+      type: string
+      description: |-
+        * `P` - Pending
+        * `A` - Paid
+        * `C` - Cancelled
+    PatchedCartItemRequest:
+      type: object
+      properties:
+        listing_id:
+          type: string
+          format: uuid
+          writeOnly: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+    PatchedUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        profile_picture:
+          type: string
+          format: binary
+          nullable: true
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        is_active:
+          type: boolean
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        location:
+          type: string
+          nullable: true
+          maxLength: 255
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+    Register:
+      type: object
+      properties:
+        username:
+          type: string
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+          minLength: 3
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+        location:
+          type: string
+          nullable: true
+          maxLength: 255
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+      required:
+      - email
+      - username
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        password_confirmation:
+          type: string
+          writeOnly: true
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        profile_picture:
+          type: string
+          format: binary
+          nullable: true
+        location:
+          type: string
+          nullable: true
+          maxLength: 255
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+      required:
+      - email
+      - password
+      - password_confirmation
+      - username
+    SoftDeleteResponse:
+      type: object
+      properties:
+        is_active:
+          type: boolean
+      required:
+      - is_active
+    TokenBlacklistRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+          minLength: 3
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        is_active:
+          type: boolean
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        location:
+          type: string
+          nullable: true
+          maxLength: 255
+        latitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+        longitude:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,6})?$
+          nullable: true
+      required:
+      - created_at
+      - email
+      - id
+      - username
+    UserPublic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+          minLength: 3
+        profile_picture:
+          type: string
+          format: uri
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - created_at
+      - id
+      - username
+    UserPublicRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        profile_picture:
+          type: string
+          format: binary
+          nullable: true
+        city:
+          type: string
+          nullable: true
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - username
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

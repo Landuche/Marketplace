@@ -1,5 +1,6 @@
 import os
 import uuid6
+from decimal import Decimal
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MinValueValidator,
@@ -74,16 +75,16 @@ class User(AbstractUser):
     city = models.CharField(max_length=100, blank=True, null=True)
 
     latitude = models.DecimalField(
-        max_digits=22,
-        decimal_places=16,
+        max_digits=9,
+        decimal_places=6,
         blank=True,
         null=True,
         validators=[MinValueValidator(-90), MaxValueValidator(90)],
     )
 
     longitude = models.DecimalField(
-        max_digits=22,
-        decimal_places=16,
+        max_digits=9,
+        decimal_places=6,
         blank=True,
         null=True,
         validators=[MinValueValidator(-180), MaxValueValidator(180)],
@@ -126,7 +127,7 @@ class Listing(models.Model):
     price = models.DecimalField(
         decimal_places=2,
         max_digits=10,
-        validators=[MinValueValidator(0.01, "Min value is 1 cent.")],
+        validators=[MinValueValidator(Decimal('0.01'), "Min value is 1 cent.")],
     )
 
     inactive_date = models.DateTimeField(null=True, blank=True)
@@ -145,12 +146,12 @@ class Listing(models.Model):
         return self.is_active
 
     @property
-    def available_stock(self):
+    def available_stock(self) -> int:
         reserved = cache.get(f"reserved_stock:{self.id}", 0)
         return max(0, self.quantity - reserved)
 
     @property
-    def main_image(self):
+    def main_image(self) -> str:
         image = self.images.filter(is_main=True).first()
         if image:
             return image.image.url

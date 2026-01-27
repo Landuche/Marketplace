@@ -84,7 +84,7 @@ const OrderDetails = () => {
     setLoading(true);
     try {
       const response = await api.post(`order/${orderId}/refund/`);
-      if (response.status == 200) fetchOrder();
+      if (response.status == 204) fetchOrder();
     } catch (error) {
       const { errors, message } = parseError(error);
       setErrors(errors);

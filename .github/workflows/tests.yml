@@ -1,13 +1,19 @@
-name: Tests
+name: CI Pipeline
 
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches: [ "master" ]
+    paths:
+      - 'backend/**'
 
 jobs:
-  test:
+  backend-validation:
+    name: Backend CI (Pytest / API Contract)
     runs-on: ubuntu-latest
     
     services:
@@ -37,7 +43,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Run Tests
+      - name: Run Pytest
         env:
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
@@ -52,3 +58,20 @@ jobs:
         run: |
           cd backend
           pytest -v -s
+
+      - name: Run Swagger validation
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DB_HOST: "localhost"
+          DB_PORT: "5432"
+          REDIS_HOST: "localhost"
+          REDIS_PORT: "6379"
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          DJANGO_SETTINGS_MODULE: marketplace.settings
+        run: |
+          cd backend
+          python manage.py spectacular --file schema_generated.yml
+          diff schema.yml schema_generated.yml

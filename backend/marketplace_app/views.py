@@ -2,7 +2,8 @@ import stripe
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Sum, F
 from django.conf import settings
-from rest_framework import viewsets, permissions, filters, generics, status
+from drf_spectacular.utils import extend_schema_view, extend_schema
+from rest_framework import viewsets, permissions, filters, generics, status, mixins
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -20,7 +21,6 @@ from .serializers import (
     ChangePasswordSerializer,
     CartSerializer,
     CartItemSerializer,
-    OrderItemSerializer,
     OrderSerializer,
 )
 from .services import (
@@ -34,21 +34,35 @@ from .services import (
     create_payment_intent,
     cancel_order,
 )
+from .schemas import (
+    REGISTER_SCHEMA,
+    CUSTOM_TOKEN_OBTAIN_SCHEMA,
+    USER_VIEWSET_SCHEMAS,
+    LISTING_SCHEMAS,
+    ORDER_SCHEMAS,
+    STRIPE_WEBHOOK_SCHEMA,
+    CART_ITEM_SCHEMAS,
+    CART_SCHEMAS
+)
 
 
+@extend_schema(**REGISTER_SCHEMA)
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
     parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
-        return register_user(serializer.validated_data)
+        user = register_user(serializer.validated_data)
+        return Response(user, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(**CUSTOM_TOKEN_OBTAIN_SCHEMA)
 class CustomTokenObtainView(TokenObtainPairView):
     serializer_class = CustomTokenObtainSerializer
 
 
+@extend_schema(**STRIPE_WEBHOOK_SCHEMA)
 class StripeWebhookView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -74,14 +88,21 @@ class StripeWebhookView(APIView):
             if order_id:
                 order_success(order_id)
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema_view(
+    list=CART_SCHEMAS["list"],
+    clear=CART_SCHEMAS["clear"],
+)
 class CartViewSet(viewsets.GenericViewSet):
     serializer_class = CartSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Cart.objects.none()
+        
         return Cart.objects.filter(user=self.request.user).annotate(
             db_total=Sum(F("items__quantity") * F("items__listing__price"))
         )
@@ -96,10 +117,22 @@ class CartViewSet(viewsets.GenericViewSet):
     def clear(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         cart.items.all().delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CartItemViewSet(viewsets.ModelViewSet):
+@extend_schema_view(
+    create=CART_ITEM_SCHEMAS["create"],
+    partial_update=CART_ITEM_SCHEMAS["partial_update"],
+    destroy=CART_ITEM_SCHEMAS["destroy"],
+)
+class CartItemViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = CartItem.objects.none()
+    http_method_names = ["post", "patch", "delete", "get"]
     serializer_class = CartItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -128,12 +161,27 @@ class CartItemViewSet(viewsets.ModelViewSet):
         return Response(serializer_response.data, status=status.HTTP_201_CREATED)
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+@extend_schema_view(
+    list=ORDER_SCHEMAS["list"],
+    create=ORDER_SCHEMAS["create"],
+    retrieve=ORDER_SCHEMAS["retrieve"],
+    mark_shipped=ORDER_SCHEMAS["mark_shipped"],
+    refund=ORDER_SCHEMAS["refund"],
+)
+class OrderViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Order.objects.none()
+        
         user = self.request.user
         mode = self.request.query_params.get("view", "buyer")
         list_view = self.action == "list"
@@ -179,7 +227,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         cancel_order(order, user)
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"], url_path="mark-shipped")
     def mark_shipped(self, request, *args, **kwargs):
@@ -202,15 +250,25 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         items.update(tracking_code=tracking_code, status="IT")
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class OrderItemViewSet(viewsets.ModelViewSet):
-    serializer_class = OrderItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class ListingViewSet(viewsets.ModelViewSet):
+@extend_schema_view(
+    list=LISTING_SCHEMAS["list"],
+    retrieve=LISTING_SCHEMAS["retrieve"],
+    create=LISTING_SCHEMAS["create"],
+    soft_delete=LISTING_SCHEMAS["soft_delete"],
+    partial_update=LISTING_SCHEMAS["partial_update"],
+    update=extend_schema(exclude=True),
+)
+class ListingViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    http_method_names = ["get", "post", "patch", "head", "options"]
     serializer_class = ListingSerializer
     filter_backends = [
         DjangoFilterBackend,
@@ -221,7 +279,11 @@ class ListingViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "description", "seller__username"]
     ordering_fields = ["price", "created_at"]
     ordering = ["-created_at"]
-    permission_classes = [IsOwnerOrReadOnly]
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.IsAuthenticated()]
+        return [IsOwnerOrReadOnly()]
 
     def get_queryset(self):
         user = self.request.user
@@ -304,10 +366,28 @@ class ListingViewSet(viewsets.ModelViewSet):
         return Response({"is_active": new_status}, status=status.HTTP_200_OK)
 
 
-class UserViewSet(viewsets.ModelViewSet):
+@extend_schema_view(
+    list=USER_VIEWSET_SCHEMAS['list'],
+    retrieve=USER_VIEWSET_SCHEMAS['retrieve'],
+    change_password=USER_VIEWSET_SCHEMAS['change_password'],
+)
+@extend_schema_view(me=USER_VIEWSET_SCHEMAS['me_get'])
+@extend_schema_view(me=USER_VIEWSET_SCHEMAS['me_patch'])
+@extend_schema_view(me=USER_VIEWSET_SCHEMAS['me_delete'])
+class UserViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = User.objects.filter(is_active=True)
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = "username"
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsOwnerOrReadOnly()]
+        
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action in ["me", "update", "partial_update"]:
@@ -320,16 +400,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
         if request.method == "GET":
             serializer = self.get_serializer(user)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         if request.method == "DELETE":
             user.soft_delete()
-            return Response(status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         serializer = self.get_serializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"], url_path="change-password")
     def change_password(self, request):

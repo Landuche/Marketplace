@@ -1,4 +1,5 @@
 import stripe
+from decimal import Decimal
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.core.validators import MinLengthValidator
@@ -99,6 +100,11 @@ class ListingImageSerializer(serializers.ModelSerializer):
 
 
 class ListingSerializer(serializers.ModelSerializer):
+    price = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        min_value=Decimal('0.01') 
+    )
     images = ListingImageSerializer(many=True, read_only=True)
 
     seller = UserPublicSerializer(read_only=True)
@@ -213,11 +219,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
-    client_secret = serializers.ReadOnlyField()
+    client_secret = serializers.CharField(read_only=True, allow_null=True)
     status_display = serializers.CharField(source="get_status_display", read_only=True)
     user_role = serializers.SerializerMethodField()
 
-    def get_user_role(self, obj):
+    def get_user_role(self, obj) -> str:
         user = self.context["request"].user
         if obj.buyer == user:
             return "buyer"
@@ -225,7 +231,7 @@ class OrderSerializer(serializers.ModelSerializer):
             return "seller"
         return "none"
 
-    def get_items(self, obj):
+    def get_items(self, obj) -> list:
         user = self.context["request"].user
         items = obj.items.all()
 

@@ -15,13 +15,30 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView, TokenBlacklistView
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.views import (
+    SpectacularAPIView, 
+    SpectacularSwaggerView,
+)
 
 from marketplace_app.views import CustomTokenObtainView
+
+TokenRefreshView = extend_schema_view(
+    post=extend_schema(
+        summary="Refresh Access Token",
+        tags=["Users"]
+    )
+)(TokenRefreshView)
+
+TokenBlacklistView = extend_schema_view(
+    post=extend_schema(
+        summary="Logout / Blacklist Token",
+        tags=["Users"]
+    )
+)(TokenBlacklistView)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -29,4 +46,6 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/blacklist/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("api/", include("marketplace_app.urls")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]
