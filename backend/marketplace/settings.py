@@ -11,15 +11,34 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import sentry_sdk
 
 from celery.schedules import crontab
 from datetime import timedelta
 from dotenv import load_dotenv
 from pathlib import Path
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
 
 load_dotenv()
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+
+SENTRY_DSN = os.getenv("SENTRY_BACKEND_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            CeleryIntegration(),
+            RedisIntegration()
+        ],
+        environment=os.getenv("SENTRY_ENV", "development"),
+        traces_sample_rate=1.0,
+        send_default_pii=True,
+    )
+    
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

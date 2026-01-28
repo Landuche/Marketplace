@@ -147,6 +147,9 @@ services:
         - VITE_STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
         - VITE_API_URL=${VITE_API_URL}
         - VITE_GOOGLE_MAPS_KEY=${VITE_GOOGLE_MAPS_KEY}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+        - VITE_SENTRY_ENV=${VITE_SENTRY_ENV}
+        - VITE_SENTRY_AUTH=${VITE_SENTRY_AUTH}
     image: marketplace_frontend:latest
     volumes:
       - frontend_static:/usr/share/nginx/html
