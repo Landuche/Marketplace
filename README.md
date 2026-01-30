@@ -43,15 +43,15 @@ This project is a high-integrity e-commerce platform designed to handle complex 
 - **Security:** Features JWT token rotation with custom Axios interceptor to handle token refreshing.
 - **Adress Validation:** Integrates Google Maps API for normalized shipping address entry.
 - **Full-Stack Type Safety:** Shared TypeScript interfaces ensure strict data contracts between the Django backend and the React frontend.
-- **CI/CD & Quality Assurance:** Automated GitHub Actions pipeline that executes the pytest suite and performs OpenAPI 3.1 schema validation using drf-spectacular.
+- **Orchestrated CI/CD:** Automated GitHub Actions pipeline utilizing Docker Compose to spin up the full infrastructure in a mirrored production environment. It executes the Pytest suite and performs OpenAPI 3.1 schema drift validation against the live generated spec.
 - **Real Time Observability:** Integrated Sentry for error and performance tracking across React and Django, featuring Session Replay to visualize UI failures and Distributed Tracing to link frontend crashes with the API.
 - **Automated Source Mapping:** Automated Vite build pipeline to upload minified source maps to Sentry, keeping production bundle secure.
 
 ## Tech Stack
 
-- **Backend:** Django / Django Rest Framework / Celery / drf-spectacular / Pytest
+- **Backend:** Django / Django Rest Framework / Celery / OpenAPI / Pytest
 - **Frontend:** React / TypeScript / Tailwind CSS / Axios
-- **Infrastructure:** Docker / Nginx / Gunicorn / Sentry / GitHub Actions
+- **Infrastructure:** Docker / Docker Compose / Nginx / Gunicorn / Sentry / GitHub Actions
 - **Database/Cache:** PostgreSQL / Redis
 - **Integrations** : Stripe API / Google Maps API
 
@@ -75,16 +75,15 @@ Este projeto é uma plataforma de e-commerce de alta integridade, projetada para
 - **Segurança:** Autenticação via JWT com rotação de tokens e interceptor customizado no Axios para gerenciamento de refresh tokens.
 - **Validação de Endereços:** Integração com Google Maps API para validação de endereços.
 - **Full-Stack Type Safety:** Interfaces TypeScript garantindo comunicação ideal entre backend e frontend.
-- **Testes Automatizados:** CI/CD implementado com GitHub Actions.
-- **CI/CD & Garantia de Qualidade:** Pipeline automatizado via GitHub Actions que executa testes pytest e realiza a validação de schema OpenAPI 3.1 via drf-spectacular.
+- **CI/CD Orquestrado:** Pipeline automatizado no GitHub Actions utilizando Docker Compose para  simular um ambiente espelhado ao de produção. Executa os testes Pytest e realiza a validação de schema drift do OpenAPI 3.1 contra a especificação gerada em tempo real.
 - **Monitoramento em Tempo Real:** Integração com Sentry para rastreamento de erros e performance no React e Django, utilizando Session Replay para visualizar falhas na UI e Distributed Tracing para conectar falhas no frontend diretamente a API.
 - **Source Maps Automatizados:** Build pipeline no Vite configurado para upload automatico de source maps para o Sentry, garantindo segurança ao bundle de produção.
 
 ## Tech Stack
 
-- **Backend:** Django / Django Rest Framework / drf-spectacular / Celery / Pytest
+- **Backend:** Django / Django Rest Framework / OpenAPI / Celery / Pytest
 - **Frontend:** React / TypeScript / Tailwind CSS / Axios
-- **Infraestrutura:** Docker / Nginx / Gunicorn / Sentry / GitHub Actions
+- **Infraestrutura:** Docker / Docker Compose / Nginx / Gunicorn / Sentry / GitHub Actions
 - **Banco de Dados/Cache:** PostgreSQL / Redis
 - **Integrações** : Stripe API / Google Maps API
 

@@ -1,8 +1,29 @@
+x-common-env: &common-env
+  DEBUG: ${DEBUG:-1}
+  SECRET_KEY: ${SECRET_KEY}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-'*'}
+  DB_HOST: ${DB_HOST}
+  DB_PORT: ${DB_PORT}
+  DB_NAME: ${DB_NAME}
+  DB_USER: ${DB_USER}
+  POSTGRES_DB: ${POSTGRES_DB}    
+  POSTGRES_USER: ${POSTGRES_USER}         
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  REDIS_URL: ${REDIS_URL:-'redis://redis:6379'}
+  STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+  STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+
 services:
   db:
     image: postgres:16-alpine
     env_file:
-      - .env
+      - path: .env
+        required: false
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -15,7 +36,10 @@ services:
   web:
     image: marketplace_app_backend:latest
     env_file:
-      - .env
+      - path: .env
+        required: false
+    environment:
+      <<: *common-env
     command: gunicorn marketplace.wsgi:application --bind 0.0.0.0:8000 --access-logfile - --error-logfile -
     expose:
       - "8000"
@@ -43,9 +67,13 @@ services:
     image: marketplace_app_backend:latest
     user: root
     env_file:
-      - .env
-    command: python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
+      - path: .env
+        required: false
+    environment:
+      <<: *common-env
+    command: >
+      sh -c "python manage.py migrate --noinput && 
+             python manage.py collectstatic --noinput"
     volumes:
       - ./backend:/app
       - static_volume:/app/static
@@ -92,7 +120,10 @@ services:
   worker:
     image: marketplace_app_backend:latest
     env_file:
-      - .env
+      - path: .env
+        required: false
+    environment:
+      <<: *common-env
     command: celery -A marketplace worker --loglevel=info
     volumes:
       - ./backend:/app
@@ -113,10 +144,10 @@ services:
   beat:
     image: marketplace_app_backend:latest
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - DJANGO_SETTINGS_MODULE=marketplace.settings
+      <<: *common-env
     env_file:
-      - .env
+      - path: .env
+        required: false
     command: celery -A marketplace beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - ./backend:/app
@@ -133,7 +164,13 @@ services:
     image: stripe/stripe-cli:latest
     command: listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://nginx:80/api/webhook/stripe/
     env_file:
-      - .env
+      - path: .env
+        required: false
+    environment:
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    restart: on-failure
     depends_on:
       web:
         condition: service_healthy
