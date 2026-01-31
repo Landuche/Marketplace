@@ -17,7 +17,6 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0, 
   
   environment: import.meta.env.VITE_SENTRY_ENV || 'development',
-  debug: true,
 });
 
 createRoot(document.getElementById('root')!).render(<App />);

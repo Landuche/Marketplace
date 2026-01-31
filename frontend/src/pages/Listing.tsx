@@ -114,7 +114,7 @@ const Listing = () => {
         / <span>{listing.title}</span>
       </nav>
 
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
+      <main className='grid grid-cols-1 lg:grid-cols-2 gap-12'>
         <div className='space-y-4'>
           <div className='relative w-full max-h-[70vh] overflow-hidden rounded-2xl bg-gray-100 shadow-sm border flex items-center justify-center'>
             {/* Blurred background layer */}
@@ -258,7 +258,7 @@ const Listing = () => {
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

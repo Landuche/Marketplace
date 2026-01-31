@@ -64,6 +64,8 @@ const HandleInput = ({ selectedLocation, initialValue }: InputProps) => {
 
   return (
     <input
+      id='maps-location'
+      name='maps-location'
       ref={inputRef}
       className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
       placeholder='Select your location...'

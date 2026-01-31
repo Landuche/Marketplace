@@ -176,16 +176,17 @@ const Register = () => {
             )}
           </div>
 
-          <label className='cursor-pointer bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors'>
+          <label htmlFor='profile-picture' className='cursor-pointer bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors'>
             Choose Profile Picture
-            <input type='file' className='hidden' accept='image/*' onChange={handleImagePreview} />
+            <input id='profile-picture' name='profile-picture' type='file' className='hidden' accept='image/*' onChange={handleImagePreview} />
           </label>
         </div>
 
         <div>
           <div className='flex flex-col space-y-2'>
-            <label className='text-sm font-semibold text-gray-700'>Username</label>
+            <label htmlFor='username' className='text-sm font-semibold text-gray-700'>Username</label>
             <input
+              id='username'
               type='text'
               name='username'
               className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
@@ -201,8 +202,9 @@ const Register = () => {
 
         <div>
           <div className='flex flex-col space-y-2'>
-            <label className='text-sm font-semibold text-gray-700'>Email</label>
+            <label htmlFor='email' className='text-sm font-semibold text-gray-700'>Email</label>
             <input
+              id='email'
               type='text'
               name='email'
               className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
@@ -218,8 +220,9 @@ const Register = () => {
 
         <div>
           <div className='flex flex-col space-y-2'>
-            <label className='text-sm font-semibold text-gray-700'>Password</label>
+            <label htmlFor='password' className='text-sm font-semibold text-gray-700'>Password</label>
             <input
+              id='password'
               type='password'
               name='password'
               className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
@@ -235,8 +238,9 @@ const Register = () => {
 
         <div>
           <div className='flex flex-col space-y-2'>
-            <label className='text-sm font-semibold text-gray-700'>Password Confirmation</label>
+            <label htmlFor='password-confirmation' className='text-sm font-semibold text-gray-700'>Password Confirmation</label>
             <input
+              id='password-confirmation'
               type='password'
               name='password_confirmation'
               className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
@@ -251,7 +255,7 @@ const Register = () => {
         </div>
 
         <div>
-          <label className='text-sm font-semibold text-gray-700'>Location</label>
+          <label htmlFor='maps-location' className='text-sm font-semibold text-gray-700'>Location</label>
           <LocationInput selectedLocation={handleLocation} />
         </div>
 

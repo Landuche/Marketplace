@@ -275,10 +275,12 @@ const ListingEdit = () => {
         <div className='space-y-4'>
           <label className='block text-sm font-medium text-gray-700'>Images</label>
           <div className='flex flex-wrap gap-4'>
-            <label className='w-30 h-30 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 transition-all'>
+            <label htmlFor='images' className='w-30 h-30 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 transition-all'>
               <span className='text-2xl text-gray-400'>+</span>
               <span className='text-xs text-gray-400'>Add Photo</span>
               <input
+                name='images'
+                id='images'
                 type='file'
                 multiple
                 className='hidden'
@@ -315,10 +317,11 @@ const ListingEdit = () => {
         </div>
 
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1 italic'>
+          <label htmlFor='title' className='block text-sm font-medium text-gray-700 mb-1 italic'>
             Listing Title
           </label>
           <input
+            id='title'
             className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
             type='text'
             name='title'
@@ -331,8 +334,9 @@ const ListingEdit = () => {
         </div>
 
         <div>
-          <label className='block test-sm font-medium text-gray-700 mb-1 italic'>Description</label>
+          <label htmlFor='description' className='block test-sm font-medium text-gray-700 mb-1 italic'>Description</label>
           <textarea
+            id='description'
             className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all h-32'
             placeholder={listing?.description || 'Listing Description'}
             name='description'
@@ -344,10 +348,11 @@ const ListingEdit = () => {
         </div>
 
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1 italic'>
-            Listing price
+          <label htmlFor='price' className='block text-sm font-medium text-gray-700 mb-1 italic'>
+            Listing Price
           </label>
           <input
+            id='price'
             className='w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all'
             type='number'
             name='price'
@@ -360,7 +365,7 @@ const ListingEdit = () => {
         </div>
 
         <div className='flex flex-col gap-2'>
-          <label className='block text-sm font-medium text-gray-700 mb-1 italic'>Quantity</label>
+          <label htmlFor='quantity' className='block text-sm font-medium text-gray-700 mb-1 italic'>Quantity</label>
           <div className='relative flex items-center max-w-[150px]'>
             <button
               type='button'
@@ -370,6 +375,7 @@ const ListingEdit = () => {
               −
             </button>
             <input
+              id='quantity'
               type='number'
               value={editedListing?.quantity}
               onChange={(e) => {

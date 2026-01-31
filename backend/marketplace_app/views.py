@@ -3,13 +3,19 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Sum, F
 from django.conf import settings
 from drf_spectacular.utils import extend_schema_view, extend_schema
+from django.http import HttpResponse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from datetime import timedelta
 from rest_framework import viewsets, permissions, filters, generics, status, mixins
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
 
+from .tasks import clean_expired_orders
 from .models import User, Listing, Cart, CartItem, Order
 from .permissions import IsOwnerOrReadOnly
 from .serializers import (
@@ -44,6 +50,40 @@ from .schemas import (
     CART_ITEM_SCHEMAS,
     CART_SCHEMAS
 )
+
+
+@csrf_exempt
+def debug_delete_user(request, username):
+    if not settings.DEBUG:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    User = get_user_model()
+    deleted, _ = User.objects.filter(username=username).delete()
+
+    if deleted:
+        return HttpResponse(status=204)
+    return HttpResponse(status=404)
+
+
+@csrf_exempt
+def debug_age_order(request, order_id):
+    if not settings.DEBUG:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    order = Order.objects.get(id=order_id)
+    order.created_at = timezone.now() - timedelta(minutes=20)
+    order.save()
+
+    return HttpResponse(status=204)
+
+
+@csrf_exempt
+def debug_clean_orders(request):
+    if not settings.DEBUG:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    clean_expired_orders()
+    return HttpResponse(status=204)
 
 
 @extend_schema(**REGISTER_SCHEMA)

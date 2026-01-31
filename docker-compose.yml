@@ -192,6 +192,22 @@ services:
       - frontend_static:/usr/share/nginx/html
     command: sh -c "cp -av /app/dist/. /usr/share/nginx/html/"
 
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.58.0-noble
+    working_dir: /app
+    profiles:
+      - test
+    volumes:
+      - ./playwright:/app
+    environment:
+      - BASE_URL=http://nginx
+    depends_on:
+      frontend:
+        condition: service_completed_successfully
+      nginx:
+        condition: service_healthy
+    command: sh -c "npm install && npx playwright test --workers 1"
+
 volumes:
   postgres_data:
   static_volume:

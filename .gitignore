@@ -24,6 +24,12 @@ frontend/.env
 frontend/.env.local
 npm-debug.log*
 
+# --- Playwright ---
+playwright/playwright-report/
+playwright/test-results/
+playwright/.auth/
+playwright/test-metadata.json
+
 # --- Specific Cleanups ---
 backend/snippets/
 backend/.coverage

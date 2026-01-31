@@ -2,6 +2,8 @@
   <a href="https://github.com/Landuche/Marketplace/actions/workflows/tests.yml">
     <img src="https://github.com/Landuche/Marketplace/actions/workflows/tests.yml/badge.svg" alt="Tests Status">
   </a>
+  <img src="https://img.shields.io/badge/OpenAPI-3.1-6BA539?logo=openapiinitiative" alt="OpenAPI 3.1">
+  <img src="https://img.shields.io/badge/Playwright-E2E%20Tested-45ba4b?logo=playwright" alt="Playwright">
   <img src="https://img.shields.io/badge/Sentry-Observed-4527a0?logo=sentry" alt="Sentry">
   <img src="https://img.shields.io/badge/code%20style-black-000000" alt="Black">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License MIT">
@@ -16,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker" alt="Docker">
+  <img src="https://img.shields.io/badge/Containerized-Docker-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/PostgreSQL-Managed-4169E1?logo=postgresql" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/Redis-Asynchronous-DC382D?logo=redis" alt="Redis">
   <img src="https://img.shields.io/badge/Celery-Distributed--Tasks-37814A?logo=celery" alt="Celery">
@@ -43,21 +45,21 @@ This project is a high-integrity e-commerce platform designed to handle complex 
 - **Security:** Features JWT token rotation with custom Axios interceptor to handle token refreshing.
 - **Adress Validation:** Integrates Google Maps API for normalized shipping address entry.
 - **Full-Stack Type Safety:** Shared TypeScript interfaces ensure strict data contracts between the Django backend and the React frontend.
-- **Orchestrated CI/CD:** Automated GitHub Actions pipeline utilizing Docker Compose to spin up the full infrastructure in a mirrored production environment. It executes the Pytest suite and performs OpenAPI 3.1 schema drift validation against the live generated spec.
+- **Orchestrated CI/CD:** GitHub Actions pipeline spins up the full Dockerized stack and executes layered validation with Playwright end-to-end tests against the live system and external APIs, Pytest for backend logic, and OpenAPI 3.1 schema drift detection against the generated spec.
 - **Real Time Observability:** Integrated Sentry for error and performance tracking across React and Django, featuring Session Replay to visualize UI failures and Distributed Tracing to link frontend crashes with the API.
 - **Automated Source Mapping:** Automated Vite build pipeline to upload minified source maps to Sentry, keeping production bundle secure.
 
 ## Tech Stack
 
-- **Backend:** Django / Django Rest Framework / Celery / OpenAPI / Pytest
+- **Backend:** Django / Django Rest Framework / Celery / OpenAPI 
 - **Frontend:** React / TypeScript / Tailwind CSS / Axios
-- **Infrastructure:** Docker / Docker Compose / Nginx / Gunicorn / Sentry / GitHub Actions
 - **Database/Cache:** PostgreSQL / Redis
+- **Testing:** Playwright / Pytest / OpenAPI Schema Validation
+- **DevOps:** Docker / Docker Compose / Nginx / Gunicorn / GitHub Actions / Sentry
 - **Integrations** : Stripe API / Google Maps API
 
 ## Next Steps
 
-- **Frontend Testing:** Implement Playwright to automate user journeys.
 - **API Testing:** Implement Postman for endpoint exploration and testing.
 - **Production Deployment:** Deploy the MVP to Oracle Cloud using Docker orchestration and Nginx SSL.
 
@@ -75,20 +77,20 @@ Este projeto é uma plataforma de e-commerce de alta integridade, projetada para
 - **Segurança:** Autenticação via JWT com rotação de tokens e interceptor customizado no Axios para gerenciamento de refresh tokens.
 - **Validação de Endereços:** Integração com Google Maps API para validação de endereços.
 - **Full-Stack Type Safety:** Interfaces TypeScript garantindo comunicação ideal entre backend e frontend.
-- **CI/CD Orquestrado:** Pipeline automatizado no GitHub Actions utilizando Docker Compose para  simular um ambiente espelhado ao de produção. Executa os testes Pytest e realiza a validação de schema drift do OpenAPI 3.1 contra a especificação gerada em tempo real.
+- **CI/CD Orquestrado:** Pipeline no GitHub Actions que roda a stack Dockerizada e executa validação em multiplas camadas, incluindo testes end-to-end com Playwright no sistema em execuçao e APIs externas, Pytest para a lógica do backend e detecção de schema drift do OpenAPI 3.1 comparando com a especificação gerada em tempo real.
 - **Monitoramento em Tempo Real:** Integração com Sentry para rastreamento de erros e performance no React e Django, utilizando Session Replay para visualizar falhas na UI e Distributed Tracing para conectar falhas no frontend diretamente a API.
 - **Source Maps Automatizados:** Build pipeline no Vite configurado para upload automatico de source maps para o Sentry, garantindo segurança ao bundle de produção.
 
 ## Tech Stack
 
-- **Backend:** Django / Django Rest Framework / OpenAPI / Celery / Pytest
+- **Backend:** Django / Django Rest Framework / Celery / OpenAPI
 - **Frontend:** React / TypeScript / Tailwind CSS / Axios
-- **Infraestrutura:** Docker / Docker Compose / Nginx / Gunicorn / Sentry / GitHub Actions
 - **Banco de Dados/Cache:** PostgreSQL / Redis
+- **Testes:** Playwright / Pytest / Validação de Schema OpenAPI
+- **DevOps:** Docker / Docker Compose / Nginx / Gunicorn / Sentry / GitHub Actions
 - **Integrações** : Stripe API / Google Maps API
 
 ## Proximos Passos
 
-- **Testes Frontend:** Implementar Playwright para automatizar fluxos do usuario.
 - **Testes de API:** Implementar Postman para exploração de endpoints e testes de integração;
 - **Deploy em Produção:** Realizar o deploy do MVP com Oracle Cloud, utilizando a orquestração Docker. 

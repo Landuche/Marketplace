@@ -57,8 +57,13 @@ const OrderDetails = () => {
   useEffect(() => {
     const status = searchParams.get('redirect_status');
     if (status === 'succeeded') {
-      toast.success('Payment successful');
       fetchOrder();
+
+      if (order?.status !== 'A'){
+        setTimeout(fetchOrder, 2000);
+      }
+
+      toast.success('Payment successful');
     }
   }, [searchParams]);
 
