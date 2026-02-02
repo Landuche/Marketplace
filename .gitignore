@@ -6,6 +6,9 @@ venv/
 start.bat
 .DS_Store
 Thumbs.db
+marketplace-key.pem
+marketplace-key.pem:Zone.Identifier
+.docker-compose.prod.yml.swp
 
 # --- Python / Django ---
 **/__pycache__/

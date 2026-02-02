@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatError, parseError } from '../utils/errors';
 import Modal from '../components/common/Modal';
 import { validateImage, validateLength } from '../utils/validator';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageState extends Partial<ListingImageInterface> {
   isNew: boolean;
@@ -152,7 +153,7 @@ const ListingEdit = () => {
       setPreview((prev) => {
         const hasMain = prev.some((img) => img.is_main);
         const newItems: ImageState[] = files.map((file, index) => ({
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           image: URL.createObjectURL(file),
           is_main: !hasMain && index === 0,
           file: file,

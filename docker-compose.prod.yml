@@ -1,7 +1,7 @@
 x-common-env: &common-env
-  DEBUG: ${DEBUG:-1}
+  DEBUG: ${DEBUG:-0}
   SECRET_KEY: ${SECRET_KEY}
-  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-'*'}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS}
   DB_HOST: ${DB_HOST}
   DB_PORT: ${DB_PORT}
   DB_NAME: ${DB_NAME}
@@ -17,9 +17,7 @@ x-common-env: &common-env
 services:
   db:
     image: postgres:16-alpine
-    env_file:
-      - path: .env
-        required: false
+    env_file: .env
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -34,13 +32,11 @@ services:
     restart: unless-stopped
 
   web:
-    image: marketplace_app_backend:latest
-    env_file:
-      - path: .env
-        required: false
+    image: ghcr.io/landuche/marketplace-backend:latest
+    env_file: .env
     environment:
       <<: *common-env
-    command: gunicorn marketplace.wsgi:application --bind 0.0.0.0:8000 --access-logfile - --error-logfile -
+    command: /usr/local/bin/python -m gunicorn marketplace.wsgi:application --workers 1 --bind 0.0.0.0:8000 --access-logfile - --error-logfile - --timeout 60
     expose:
       - "8000"
     volumes:
@@ -62,16 +58,13 @@ services:
     restart: unless-stopped
 
   init:
-    build: ./backend
-    image: marketplace_app_backend:latest
+    image: ghcr.io/landuche/marketplace-backend:latest
     user: root
-    env_file:
-      - path: .env
-        required: false
+    env_file: .env
     environment:
       <<: *common-env
     command: >
-      sh -c "python manage.py migrate --noinput && 
+      /bin/sh -c -c "python manage.py migrate --noinput && 
              python manage.py collectstatic --noinput"
     volumes:
       - static_volume:/app/static
@@ -93,16 +86,7 @@ services:
       restart: unless-stopped
 
   nginx:
-      build:
-        context: .
-        dockerfile: nginx/Dockerfile
-        args:
-          - VITE_API_URL=${VITE_API_URL}
-          - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
-          - VITE_GOOGLE_MAPS_KEY=${VITE_GOOGLE_MAPS_KEY}
-          - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
-          - VITE_SENTRY_ENV=${VITE_SENTRY_ENV}
-          - VITE_SENTRY_AUTH=${VITE_SENTRY_AUTH}
+      image: ghcr.io/landuche/marketplace-frontend:latest
       volumes:
         - static_volume:/app/static
         - media_volume:/app/media
@@ -121,10 +105,8 @@ services:
           condition: service_completed_successfully
 
   worker:
-    image: marketplace_app_backend:latest
-    env_file:
-      - path: .env
-        required: false
+    image: ghcr.io/landuche/marketplace-backend:latest
+    env_file: .env
     environment:
       <<: *common-env
     command: celery -A marketplace worker --loglevel=info
@@ -146,53 +128,23 @@ services:
     restart: unless-stopped
 
   beat:
-    image: marketplace_app_backend:latest
+    image: ghcr.io/landuche/marketplace-backend:latest
     environment:
       <<: *common-env
-    env_file:
-      - path: .env
-        required: false
+    env_file: .env
     command: celery -A marketplace beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
     depends_on:
-      worker:
-        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
-  stripe:
-    image: stripe/stripe-cli:latest
-    command: listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://nginx:80/api/webhook/stripe/
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-    restart: on-failure
-    depends_on:
-      web:
-        condition: service_healthy
-      nginx:
-        condition: service_healthy
-
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.58.0-noble
-    working_dir: /app
-    profiles:
-      - test
-    volumes:
-      - ./playwright:/app
-    environment:
-      - BASE_URL=http://nginx
-    depends_on:
-      nginx:
-        condition: service_healthy
-      web:
-        condition: service_healthy
-    command: sh -c "npm install && npx playwright test --workers 1"
 
 volumes:
   postgres_data:
