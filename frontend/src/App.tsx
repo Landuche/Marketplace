@@ -35,10 +35,10 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
-          <div className='bg-gray-50'>
+    <div className='bg-gray-50 min-h-screen'>
+      <BrowserRouter>
+        <AuthProvider>
+          <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
             <Navbar />
             <Toaster position='top-right' richColors />
             <Routes>
@@ -64,10 +64,10 @@ function App() {
                 <Route path='/settings/profile' element={<ProfileEdit />} />
               </Route>
             </Routes>
-          </div>
-        </APIProvider>
-      </AuthProvider>
-    </BrowserRouter>
+          </APIProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </div>
   );
 }
 

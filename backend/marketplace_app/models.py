@@ -13,6 +13,7 @@ from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 from versatileimagefield.fields import VersatileImageField
+from django_prometheus.models import ExportModelOperationsMixin
 
 from .utils import validate_image
 
@@ -37,7 +38,7 @@ def listing_image_upload(instance, filename):
     )
 
 
-class User(AbstractUser):
+class User(ExportModelOperationsMixin("user"), AbstractUser):
     id = models.UUIDField(
         primary_key=True, default=uuid7, editable=False, unique=True, db_index=True
     )
@@ -103,7 +104,7 @@ class User(AbstractUser):
         self.listings.filter(is_active=True).update(is_active=False)
 
 
-class Listing(models.Model):
+class Listing(ExportModelOperationsMixin("listing"), models.Model):
     class ListingStatus(models.TextChoices):
         IN_STOCK = "IS", "In Stock"
         OUT_OF_STOCK = "OOS", "Out of Stock"
@@ -158,7 +159,7 @@ class Listing(models.Model):
         return "https://placehold.co/600x400/e2e8f0/475569?text=No+Image+Available"
 
 
-class ListingImage(models.Model):
+class ListingImage(ExportModelOperationsMixin("listing-image"), models.Model):
     id = models.UUIDField(
         primary_key=True, default=uuid7, editable=False, unique=True, db_index=True
     )
@@ -177,11 +178,11 @@ class ListingImage(models.Model):
         ordering = ["-is_main", "id"]
 
 
-class Cart(models.Model):
+class Cart(ExportModelOperationsMixin("cart"), models.Model):
     user = models.OneToOneField("user", on_delete=models.CASCADE, related_name="cart")
 
 
-class CartItem(models.Model):
+class CartItem(ExportModelOperationsMixin("cart-item"), models.Model):
     cart = models.ForeignKey("cart", on_delete=models.CASCADE, related_name="items")
 
     listing = models.ForeignKey(
@@ -199,7 +200,7 @@ class CartItem(models.Model):
         return self.listing.price * self.quantity
 
 
-class Order(models.Model):
+class Order(ExportModelOperationsMixin("order"), models.Model):
     class PaymentStatus(models.TextChoices):
         PENDING = "P", "Pending"
         PAID = "A", "Paid"
@@ -229,7 +230,7 @@ class Order(models.Model):
         ordering = ["id"]
 
 
-class OrderItem(models.Model):
+class OrderItem(ExportModelOperationsMixin("order-item"), models.Model):
     class ShippingStatus(models.TextChoices):
         AWAITING_PAYMENT = "AP", "Awaiting Payment"
         AWAITING_SHIPMENT = "AS", "Awaiting Shipment"

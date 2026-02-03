@@ -9,6 +9,7 @@ Thumbs.db
 marketplace-key.pem
 marketplace-key.pem:Zone.Identifier
 .docker-compose.prod.yml.swp
+certbot/
 
 # --- Python / Django ---
 **/__pycache__/

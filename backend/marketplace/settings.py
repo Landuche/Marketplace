@@ -72,15 +72,18 @@ INSTALLED_APPS = [
     "django_filters",
     "django_extensions",
     "django_celery_beat",
+    "django_prometheus",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "versatileimagefield",
     "channels",
     "corsheaders",
     "drf_spectacular",
+    "storages",
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -90,6 +93,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "marketplace.urls"
@@ -232,19 +236,25 @@ SPECTACULAR_SETTINGS = {
 
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = "marketplace-landuche-media"
+AWS_S3_REGION_NAME = 'sa-east-1'  # Change to your region
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django_prometheus.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
@@ -289,5 +299,10 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "/app/static"
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/app/media'
+
+if AWS_S3_CUSTOM_DOMAIN:
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+else:
+    MEDIA_URL = "/media/"
+
+MEDIA_ROOT = "/app/media"
